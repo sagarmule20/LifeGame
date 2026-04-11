@@ -185,7 +185,7 @@ export default function ProfileScreen() {
             LOG OUT
           </button>
         ) : (
-          <button onClick={() => window.location.reload()} className="btn btn-green w-full py-3 text-sm">
+          <button onClick={() => { useGameStore.setState({ initialized: false }); window.location.reload() }} className="btn btn-green w-full py-3 text-sm">
             SIGN IN TO SAVE PROGRESS
           </button>
         )}
