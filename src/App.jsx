@@ -13,6 +13,7 @@ import QuestScreen from './screens/QuestScreen'
 import DailyScreen from './screens/DailyScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import RewardsScreen from './screens/RewardsScreen'
+import LeaderboardScreen from './screens/LeaderboardScreen'
 
 export default function App() {
   const [authReady, setAuthReady] = useState(false)
@@ -38,10 +39,13 @@ export default function App() {
           resetDailyTasks()
         })
       } else {
-        // No session — check if already initialized locally
-        initializeStore()
-        resetDailyTasks()
-        if (!useGameStore.getState().user) {
+        // No session — check if already has local data (skipped auth before)
+        const state = useGameStore.getState()
+        if (state.initialized) {
+          // Already has local data, just reset daily
+          resetDailyTasks()
+        } else {
+          // First time — show auth
           setShowAuth(true)
         }
       }
@@ -122,6 +126,7 @@ export default function App() {
           <Route path="/mission/:missionId" element={<MissionScreen />} />
           <Route path="/quest/:questId" element={<QuestScreen />} />
           <Route path="/rewards" element={<RewardsScreen />} />
+          <Route path="/leaderboard" element={<LeaderboardScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
         </Routes>
         <BottomNav />
