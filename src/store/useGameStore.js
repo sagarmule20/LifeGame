@@ -13,17 +13,29 @@ const getYesterdayString = () => {
 const useGameStore = create(
   persist(
     (set, get) => ({
+      // Auth
+      user: null,
+      setUser: (user) => set({ user }),
+
+      // Core data
       missions: [],
       quests: [],
       tasks: [],
       initialized: false,
 
-      // Achievement & loot tracking
-      unlockedAchievements: [], // array of achievement ids
-      inventory: [],            // collected loot items
+      // Coins instead of XP
+      coins: 0,
+      totalCoinsEarned: 0,
       totalTasksCompleted: 0,
 
-      // Event queue for UI animations (not persisted — set transiently)
+      // Rewards shop
+      rewards: [],
+
+      // Achievements & inventory
+      unlockedAchievements: [],
+      inventory: [],
+
+      // Transient UI events (not persisted)
       _pendingLevelUp: null,
       _pendingLoot: null,
       _pendingAchievements: [],
@@ -35,15 +47,18 @@ const useGameStore = create(
           quests: seedQuests,
           tasks: seedTasks,
           initialized: true,
+          coins: 0,
+          totalCoinsEarned: 0,
+          totalTasksCompleted: 0,
           unlockedAchievements: [],
           inventory: [],
-          totalTasksCompleted: 0,
+          rewards: [],
         })
       },
 
       completeTask: (taskId) => {
         const state = get()
-        const { tasks, quests, missions } = state
+        const { tasks, quests, missions, coins, totalCoinsEarned } = state
         const task = tasks.find((t) => t.id === taskId)
         if (!task || task.completedToday) return
 
@@ -59,21 +74,24 @@ const useGameStore = create(
 
         const quest = quests.find((q) => q.id === task.questId)
         const oldMission = missions.find((m) => m.id === quest.missionId)
-        const newXp = oldMission.xp + task.xpReward
-        const newLevel = Math.floor(newXp / 100)
+        const newMissionCoins = oldMission.coinsEarned + task.coinReward
+        const newLevel = Math.floor(newMissionCoins / 100)
         const leveledUp = newLevel > oldMission.level
 
         const updatedMissions = missions.map((m) =>
           m.id === quest.missionId
-            ? { ...m, xp: newXp, level: newLevel }
+            ? { ...m, coinsEarned: newMissionCoins, level: newLevel }
             : m
         )
 
-        // Roll for loot (30% chance, 100% on level up)
-        const loot = (leveledUp || Math.random() < 0.30) ? rollLoot() : null
+        const newCoins = coins + task.coinReward
+        const newTotalEarned = totalCoinsEarned + task.coinReward
 
-        // Check achievements
-        const newState = { ...state, tasks: updatedTasks, missions: updatedMissions }
+        // Loot: 25% chance, 100% on level-up
+        const loot = (leveledUp || Math.random() < 0.25) ? rollLoot() : null
+
+        // Achievements
+        const newState = { ...state, tasks: updatedTasks, missions: updatedMissions, coins: newCoins }
         const newAchievements = ACHIEVEMENTS.filter(
           (a) => !state.unlockedAchievements.includes(a.id) && a.check(newState)
         )
@@ -81,11 +99,10 @@ const useGameStore = create(
         set({
           tasks: updatedTasks,
           missions: updatedMissions,
+          coins: newCoins,
+          totalCoinsEarned: newTotalEarned,
           totalTasksCompleted: state.totalTasksCompleted + 1,
-          unlockedAchievements: [
-            ...state.unlockedAchievements,
-            ...newAchievements.map((a) => a.id),
-          ],
+          unlockedAchievements: [...state.unlockedAchievements, ...newAchievements.map((a) => a.id)],
           inventory: loot ? [...state.inventory, { ...loot, obtainedAt: Date.now() }] : state.inventory,
           _pendingLevelUp: leveledUp
             ? { missionName: oldMission.name, missionIcon: oldMission.icon, newLevel, missionColor: oldMission.color }
@@ -95,28 +112,29 @@ const useGameStore = create(
         })
       },
 
-      clearPendingEvents: () => {
-        set({ _pendingLevelUp: null, _pendingLoot: null, _pendingAchievements: [] })
-      },
+      clearPendingEvents: () => set({ _pendingLevelUp: null, _pendingLoot: null, _pendingAchievements: [] }),
 
       uncompleteTask: (taskId) => {
-        const { tasks, quests, missions } = get()
+        const { tasks, quests, missions, coins } = get()
         const task = tasks.find((t) => t.id === taskId)
         if (!task || !task.completedToday) return
 
         const updatedTasks = tasks.map((t) =>
           t.id === taskId ? { ...t, completedToday: false } : t
         )
-
         const quest = quests.find((q) => q.id === task.questId)
-        const newXp = Math.max(0, missions.find((m) => m.id === quest.missionId).xp - task.xpReward)
+        const mission = missions.find((m) => m.id === quest.missionId)
+        const newCoinsEarned = Math.max(0, mission.coinsEarned - task.coinReward)
         const updatedMissions = missions.map((m) =>
           m.id === quest.missionId
-            ? { ...m, xp: newXp, level: Math.floor(newXp / 100) }
+            ? { ...m, coinsEarned: newCoinsEarned, level: Math.floor(newCoinsEarned / 100) }
             : m
         )
-
-        set({ tasks: updatedTasks, missions: updatedMissions })
+        set({
+          tasks: updatedTasks,
+          missions: updatedMissions,
+          coins: Math.max(0, coins - task.coinReward),
+        })
       },
 
       resetDailyTasks: () => {
@@ -131,26 +149,55 @@ const useGameStore = create(
 
       addQuest: (missionId, name, description) => {
         const id = 'quest-' + Date.now()
-        set((state) => ({
-          quests: [...state.quests, { id, missionId, name, description }],
-        }))
+        set((s) => ({ quests: [...s.quests, { id, missionId, name, description }] }))
         return id
       },
 
-      addTask: (questId, name, xpReward = 15) => {
+      addTask: (questId, name, coinReward = 10, scheduledTime = null) => {
         const id = 'task-' + Date.now()
-        set((state) => ({
-          tasks: [
-            ...state.tasks,
-            { id, questId, name, xpReward, streak: 0, lastCompletedDate: null, completedToday: false },
-          ],
+        set((s) => ({
+          tasks: [...s.tasks, {
+            id, questId, name, coinReward,
+            streak: 0, lastCompletedDate: null, completedToday: false,
+            scheduledTime,
+          }],
         }))
+      },
+
+      updateTaskTime: (taskId, scheduledTime) => {
+        set((s) => ({
+          tasks: s.tasks.map((t) => t.id === taskId ? { ...t, scheduledTime } : t),
+        }))
+      },
+
+      // Rewards shop
+      addReward: (name, cost, icon = '🎁') => {
+        const id = 'reward-' + Date.now()
+        set((s) => ({
+          rewards: [...s.rewards, { id, name, cost, icon, purchased: false }],
+        }))
+      },
+
+      purchaseReward: (rewardId) => {
+        const { rewards, coins } = get()
+        const reward = rewards.find((r) => r.id === rewardId)
+        if (!reward || reward.purchased || coins < reward.cost) return false
+        set({
+          coins: coins - reward.cost,
+          rewards: rewards.map((r) =>
+            r.id === rewardId ? { ...r, purchased: true, purchasedAt: Date.now() } : r
+          ),
+        })
+        return true
+      },
+
+      deleteReward: (rewardId) => {
+        set((s) => ({ rewards: s.rewards.filter((r) => r.id !== rewardId) }))
       },
     }),
     {
       name: 'life-game-storage',
       partialize: (state) => {
-        // Don't persist transient UI events
         const { _pendingLevelUp, _pendingLoot, _pendingAchievements, ...rest } = state
         return rest
       },

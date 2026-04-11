@@ -15,10 +15,10 @@ export const ACHIEVEMENTS = [
   { id: 'level-10', name: 'Master', desc: 'Reach Level 10 — true mastery', icon: '🐉', check: (s) => s.missions.some(m => m.level >= 10) },
   { id: 'all-level-1', name: 'Well Rounded', desc: 'All missions at Lv.1+', icon: '🌟', check: (s) => s.missions.length > 0 && s.missions.every(m => m.level >= 1) },
 
-  // XP milestones
-  { id: 'xp-100', name: 'Century', desc: 'Earn 100 total XP', icon: '💰', check: (s) => s.missions.reduce((sum, m) => sum + m.xp, 0) >= 100 },
-  { id: 'xp-500', name: 'Treasure Hunter', desc: 'Earn 500 total XP', icon: '💎', check: (s) => s.missions.reduce((sum, m) => sum + m.xp, 0) >= 500 },
-  { id: 'xp-1000', name: 'Dragon Hoard', desc: '1000 XP — you\'re rich!', icon: '🐲', check: (s) => s.missions.reduce((sum, m) => sum + m.xp, 0) >= 1000 },
+  // Coin milestones
+  { id: 'coins-100', name: 'First Savings', desc: 'Earn 100 coins', icon: '💰', check: (s) => s.missions.reduce((sum, m) => sum + (m.coinsEarned || 0), 0) >= 100 },
+  { id: 'coins-500', name: 'Treasure Hunter', desc: 'Earn 500 coins', icon: '💎', check: (s) => s.missions.reduce((sum, m) => sum + (m.coinsEarned || 0), 0) >= 500 },
+  { id: 'coins-1000', name: 'Dragon Hoard', desc: '1000 coins — you\'re rich!', icon: '🐲', check: (s) => s.missions.reduce((sum, m) => sum + (m.coinsEarned || 0), 0) >= 1000 },
 
   // Quest achievements
   { id: 'quest-complete', name: 'Quest Master', desc: 'Complete all tasks in a quest', icon: '📜', check: (s) => {

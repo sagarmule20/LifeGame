@@ -19,148 +19,101 @@ export default function QuestScreen() {
 
   const [showForm, setShowForm] = useState(false)
   const [taskName, setTaskName] = useState('')
-  const [taskXp, setTaskXp] = useState('15')
+  const [taskCoins, setTaskCoins] = useState('10')
+  const [taskTime, setTaskTime] = useState('')
 
   if (!quest || !mission) return null
 
-  const completedCount = tasks.filter((t) => t.completedToday).length
-  const totalXpEarned = tasks.filter((t) => t.completedToday).reduce((sum, t) => sum + t.xpReward, 0)
-  const allDone = completedCount === tasks.length && tasks.length > 0
+  const done = tasks.filter((t) => t.completedToday).length
+  const earned = tasks.filter((t) => t.completedToday).reduce((s, t) => s + t.coinReward, 0)
+  const allDone = done === tasks.length && tasks.length > 0
 
   const handleToggle = (taskId) => {
     const task = tasks.find((t) => t.id === taskId)
-    if (task?.completedToday) {
-      uncompleteTask(taskId)
-    } else {
-      completeTask(taskId)
-    }
+    task?.completedToday ? uncompleteTask(taskId) : completeTask(taskId)
   }
 
-  const handleAddTask = (e) => {
+  const handleAdd = (e) => {
     e.preventDefault()
     if (!taskName.trim()) return
-    addTask(questId, taskName.trim(), parseInt(taskXp) || 15)
+    addTask(questId, taskName.trim(), parseInt(taskCoins) || 10, taskTime || null)
     setTaskName('')
-    setTaskXp('15')
+    setTaskCoins('10')
+    setTaskTime('')
     setShowForm(false)
   }
 
   return (
-    <div className="p-4">
-      {/* Back button */}
-      <button
-        onClick={() => navigate(`/mission/${quest.missionId}`)}
-        className="font-pixel text-[10px] mb-4 flex items-center gap-1 active:scale-95 transition-transform"
-        style={{ color: 'var(--text-secondary)' }}
-      >
-        {'⬅️'} {mission.name.toUpperCase()}
+    <div className="px-4 pt-5 pb-4">
+      <button onClick={() => navigate(`/mission/${quest.missionId}`)}
+        className="text-sm font-bold mb-4 active:scale-95 transition-transform"
+        style={{ color: 'var(--text-dim)' }}>
+        ← {mission.name}
       </button>
 
       {/* Quest header */}
       <div className="mb-4">
-        <div className="h-1.5 w-16 mb-3" style={{ backgroundColor: mission.color, boxShadow: `0 0 8px ${mission.color}44` }} />
-        <h1 className="font-pixel text-sm mb-2" style={{ color: 'var(--text-primary)' }}>
-          {'📜'} {quest.name}
-        </h1>
-        <p className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
-          "{quest.description}"
-        </p>
+        <div className="h-1.5 w-12 rounded-full mb-3" style={{ background: mission.color }} />
+        <h1 className="text-xl font-black mb-1">{quest.name}</h1>
+        <p className="text-sm" style={{ color: 'var(--text-dim)' }}>{quest.description}</p>
       </div>
 
-      {/* Battle summary */}
-      <div
-        className="pixel-card p-3 mb-4 flex justify-around text-center"
-        style={{ borderColor: allDone ? 'var(--success)' : mission.color }}
-      >
+      {/* Stats */}
+      <div className="card p-3 mb-5 flex justify-around text-center"
+        style={{ borderColor: allDone ? 'var(--green)' : mission.color }}>
         <div>
-          <div className="font-pixel text-[7px]" style={{ color: 'var(--text-secondary)' }}>DEFEATED</div>
-          <div className="font-pixel text-lg" style={{ color: allDone ? 'var(--success)' : 'var(--text-primary)' }}>
-            {completedCount}/{tasks.length}
-          </div>
+          <p className="text-xs font-bold" style={{ color: 'var(--text-muted)' }}>DONE</p>
+          <p className="text-lg font-black" style={{ color: allDone ? 'var(--green)' : 'var(--text)' }}>{done}/{tasks.length}</p>
         </div>
         <div>
-          <div className="font-pixel text-[7px]" style={{ color: 'var(--text-secondary)' }}>XP EARNED</div>
-          <div
-            className="font-pixel text-lg"
-            style={{ color: 'var(--accent)', textShadow: '0 0 8px rgba(245,158,11,0.3)' }}
-          >
-            {totalXpEarned}
-          </div>
+          <p className="text-xs font-bold" style={{ color: 'var(--text-muted)' }}>EARNED</p>
+          <p className="text-lg font-black coin-badge">🪙 {earned}</p>
         </div>
       </div>
 
-      {/* Tasks header */}
+      {/* Add task */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-pixel text-[10px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
-          {'⚔️'} ENEMIES
-        </h2>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="font-pixel text-[8px] px-3 py-1 active:scale-95 transition-transform"
-          style={{ backgroundColor: 'var(--accent)', color: '#0f172a' }}
-        >
-          + SUMMON
+        <h2 className="text-sm font-extrabold" style={{ color: 'var(--text-dim)' }}>Tasks</h2>
+        <button onClick={() => setShowForm(!showForm)} className="btn btn-green text-xs py-2 px-3">
+          + Add Task
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleAddTask} className="pixel-card p-3 mb-3 flex flex-col gap-2" style={{ borderColor: mission.color }}>
-          <input
-            type="text"
-            placeholder="Enemy name..."
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
-            className="bg-transparent text-sm px-2 py-1 outline-none"
-            style={{ borderBottom: `1px solid ${mission.color}`, color: 'var(--text-primary)' }}
-            autoFocus
-          />
-          <div className="flex items-center gap-2">
-            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Bounty XP:</span>
-            <input
-              type="number"
-              value={taskXp}
-              onChange={(e) => setTaskXp(e.target.value)}
-              className="bg-transparent text-sm px-2 py-1 w-20 outline-none"
-              style={{ borderBottom: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
-              min="1" max="100"
-            />
+        <form onSubmit={handleAdd} className="card p-4 mb-3 space-y-3">
+          <input type="text" placeholder="Task name..." value={taskName}
+            onChange={(e) => setTaskName(e.target.value)} className="input" autoFocus />
+          <div className="flex gap-2">
+            <div className="flex-1 flex items-center gap-2">
+              <span>🪙</span>
+              <input type="number" placeholder="Coins" value={taskCoins}
+                onChange={(e) => setTaskCoins(e.target.value)} className="input" min="1" max="100" />
+            </div>
+            <div className="flex-1 flex items-center gap-2">
+              <span>🕐</span>
+              <input type="time" value={taskTime}
+                onChange={(e) => setTaskTime(e.target.value)} className="input" />
+            </div>
           </div>
-          <button
-            type="submit"
-            className="font-pixel text-[8px] px-3 py-2 self-end active:scale-95 transition-transform"
-            style={{ backgroundColor: 'var(--success)', color: '#0f172a' }}
-          >
-            {'🗡️'} ADD ENEMY
-          </button>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setShowForm(false)} className="btn btn-ghost flex-1 py-2 text-xs">Cancel</button>
+            <button type="submit" className="btn btn-green flex-1 py-2 text-xs">Add</button>
+          </div>
         </form>
       )}
 
       {/* Task list */}
-      <div
-        className="pixel-card overflow-hidden"
-        style={{ borderColor: allDone ? 'var(--success)' : mission.color }}
-      >
+      <div className="card overflow-hidden" style={{ borderColor: allDone ? 'var(--green)' : mission.color }}>
         {tasks.length === 0 ? (
-          <p className="text-center py-8 text-xs" style={{ color: 'var(--text-secondary)' }}>
-            {'🏜️'} No enemies here yet. Summon your first foe!
+          <p className="text-center py-8 text-sm" style={{ color: 'var(--text-muted)' }}>
+            No tasks yet. Add your first one!
           </p>
-        ) : (
-          tasks.map((task, i) => (
-            <div key={task.id} className="quest-appear" style={{ animationDelay: `${i * 0.05}s` }}>
-              <TaskRow task={task} onToggle={handleToggle} />
-            </div>
-          ))
-        )}
+        ) : tasks.map((task, i) => (
+          <div key={task.id} className="slide-up" style={{ animationDelay: `${i * 0.04}s` }}>
+            <TaskRow task={task} onToggle={handleToggle} showTime />
+          </div>
+        ))}
       </div>
-
-      {allDone && (
-        <div className="text-center mt-4" style={{ animation: 'questAppear 0.5s ease-out' }}>
-          <span className="text-3xl" style={{ animation: 'bounce 1s ease-in-out infinite' }}>{'🏆'}</span>
-          <p className="font-pixel text-[9px] mt-2" style={{ color: 'var(--success)' }}>
-            QUEST COMPLETE!
-          </p>
-        </div>
-      )}
     </div>
   )
 }

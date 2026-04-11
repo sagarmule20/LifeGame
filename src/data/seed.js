@@ -1,7 +1,7 @@
 export const seedMissions = [
-  { id: 'mission-health', name: 'Health', icon: '\uD83D\uDCAA', xp: 0, level: 0, color: '#ef4444' },
-  { id: 'mission-mind', name: 'Mind', icon: '\uD83E\uDDE0', xp: 0, level: 0, color: '#8b5cf6' },
-  { id: 'mission-career', name: 'Career', icon: '\uD83D\uDE80', xp: 0, level: 0, color: '#3b82f6' },
+  { id: 'mission-health', name: 'Health', icon: '💪', coinsEarned: 0, level: 0, color: '#58CC02' },
+  { id: 'mission-mind', name: 'Mind', icon: '🧠', coinsEarned: 0, level: 0, color: '#CE82FF' },
+  { id: 'mission-career', name: 'Career', icon: '🚀', coinsEarned: 0, level: 0, color: '#1CB0F6' },
 ]
 
 export const seedQuests = [
@@ -18,14 +18,14 @@ export const seedQuests = [
 ]
 
 export const seedTasks = [
-  { id: 'task-gym-workout', questId: 'quest-gym', name: 'Complete workout', xpReward: 25, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-water-8cups', questId: 'quest-water', name: 'Drink 8 cups of water', xpReward: 10, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-sleep-8hrs', questId: 'quest-sleep', name: 'Sleep 8 hours', xpReward: 20, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-walk-30min', questId: 'quest-walk', name: 'Walk 30 minutes', xpReward: 15, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-read-30min', questId: 'quest-read', name: 'Read for 30 minutes', xpReward: 20, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-meditate-10', questId: 'quest-meditate', name: 'Meditate 10 minutes', xpReward: 15, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-journal-entry', questId: 'quest-journal', name: 'Write journal entry', xpReward: 15, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-deepwork-2hr', questId: 'quest-deepwork', name: '2-hour deep work', xpReward: 30, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-learn-1hr', questId: 'quest-learn', name: 'Learn for 1 hour', xpReward: 20, streak: 0, lastCompletedDate: null, completedToday: false },
-  { id: 'task-ship-feature', questId: 'quest-ship', name: 'Ship a feature/PR', xpReward: 35, streak: 0, lastCompletedDate: null, completedToday: false },
+  { id: 'task-gym-workout', questId: 'quest-gym', name: 'Complete workout', coinReward: 25, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-water-8cups', questId: 'quest-water', name: 'Drink 8 cups of water', coinReward: 10, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-sleep-8hrs', questId: 'quest-sleep', name: 'Sleep 8 hours', coinReward: 20, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-walk-30min', questId: 'quest-walk', name: 'Walk 30 minutes', coinReward: 15, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-read-30min', questId: 'quest-read', name: 'Read for 30 minutes', coinReward: 20, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-meditate-10', questId: 'quest-meditate', name: 'Meditate 10 minutes', coinReward: 15, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-journal-entry', questId: 'quest-journal', name: 'Write journal entry', coinReward: 15, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-deepwork-2hr', questId: 'quest-deepwork', name: '2-hour deep work', coinReward: 30, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-learn-1hr', questId: 'quest-learn', name: 'Learn for 1 hour', coinReward: 20, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
+  { id: 'task-ship-feature', questId: 'quest-ship', name: 'Ship a feature/PR', coinReward: 35, streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime: null },
 ]

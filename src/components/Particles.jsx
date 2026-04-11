@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 const PARTICLE_COUNT = 35
 
-export default function Particles({ color = 'rgba(245,158,11,0.4)', speed = 0.3 }) {
+export default function Particles({ color = 'rgba(88,204,2,0.3)', speed = 0.3 }) {
   const canvasRef = useRef(null)
   const particlesRef = useRef([])
   const animRef = useRef(null)
@@ -49,7 +49,7 @@ export default function Particles({ color = 'rgba(245,158,11,0.4)', speed = 0.3 
 
         if (p.type === 'star') {
           // Draw tiny 4-point star
-          ctx.fillStyle = '#f59e0b'
+          ctx.fillStyle = '#FFC800'
           ctx.translate(p.x, p.y)
           ctx.rotate(p.pulse)
           for (let i = 0; i < 4; i++) {

@@ -1,46 +1,129 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import useGameStore from './store/useGameStore'
+import { supabase } from './lib/supabase'
+import { syncToCloud, loadFromCloud } from './lib/sync'
+import { requestNotificationPermission, scheduleTaskNotifications } from './lib/notifications'
 import BottomNav from './components/BottomNav'
 import GameEventManager from './components/GameEventManager'
-import Particles from './components/Particles'
+import AuthScreen from './screens/AuthScreen'
 import MapScreen from './screens/MapScreen'
 import MissionScreen from './screens/MissionScreen'
 import QuestScreen from './screens/QuestScreen'
 import DailyScreen from './screens/DailyScreen'
 import ProfileScreen from './screens/ProfileScreen'
+import RewardsScreen from './screens/RewardsScreen'
 
 export default function App() {
+  const [authReady, setAuthReady] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
+  const user = useGameStore((s) => s.user)
+  const setUser = useGameStore((s) => s.setUser)
   const initializeStore = useGameStore((s) => s.initializeStore)
   const resetDailyTasks = useGameStore((s) => s.resetDailyTasks)
+  const tasks = useGameStore((s) => s.tasks)
 
+  // Check auth state on mount
   useEffect(() => {
-    initializeStore()
-    resetDailyTasks()
-  }, [initializeStore, resetDailyTasks])
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user)
+        // Try loading cloud data
+        loadFromCloud(session.user.id).then((cloudData) => {
+          if (cloudData) {
+            useGameStore.setState({ ...cloudData, initialized: true })
+          } else {
+            initializeStore()
+          }
+          resetDailyTasks()
+        })
+      } else {
+        // No session — check if already initialized locally
+        initializeStore()
+        resetDailyTasks()
+        if (!useGameStore.getState().user) {
+          setShowAuth(true)
+        }
+      }
+      setAuthReady(true)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Schedule notifications when tasks change
+  useEffect(() => {
+    if (tasks.length > 0) {
+      requestNotificationPermission().then(() => {
+        scheduleTaskNotifications(tasks)
+      })
+    }
+  }, [tasks])
+
+  // Auto-sync to cloud periodically
+  useEffect(() => {
+    if (!user?.id) return
+    const interval = setInterval(() => {
+      const state = useGameStore.getState()
+      syncToCloud(user.id, state)
+    }, 30000) // sync every 30s
+    return () => clearInterval(interval)
+  }, [user?.id])
+
+  const handleAuth = (authUser) => {
+    setShowAuth(false)
+    if (authUser) {
+      setUser(authUser)
+      loadFromCloud(authUser.id).then((cloudData) => {
+        if (cloudData) {
+          useGameStore.setState({ ...cloudData, initialized: true })
+        } else {
+          initializeStore()
+        }
+        resetDailyTasks()
+      })
+    } else {
+      initializeStore()
+      resetDailyTasks()
+    }
+  }
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="text-center">
+          <div className="text-5xl mb-4" style={{ animation: 'bounce 1s ease-in-out infinite' }}>🏆</div>
+          <p className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (showAuth) {
+    return <AuthScreen onAuth={handleAuth} />
+  }
 
   return (
     <BrowserRouter>
       <div
-        className="max-w-[430px] mx-auto min-h-screen relative pb-20 overflow-hidden"
-        style={{ backgroundColor: 'var(--bg-primary)' }}
+        className="max-w-[430px] mx-auto min-h-screen relative pb-20"
+        style={{ background: 'var(--bg)' }}
       >
-        {/* Ambient particles */}
-        <Particles />
-
-        {/* Game event overlays (level-up, loot, achievements, XP fly-ups) */}
         <GameEventManager />
-
-        <div className="relative" style={{ zIndex: 2 }}>
-          <Routes>
-            <Route path="/" element={<MapScreen />} />
-            <Route path="/mission/:missionId" element={<MissionScreen />} />
-            <Route path="/quest/:questId" element={<QuestScreen />} />
-            <Route path="/daily" element={<DailyScreen />} />
-            <Route path="/profile" element={<ProfileScreen />} />
-          </Routes>
-        </div>
-
+        <Routes>
+          <Route path="/" element={<DailyScreen />} />
+          <Route path="/map" element={<MapScreen />} />
+          <Route path="/mission/:missionId" element={<MissionScreen />} />
+          <Route path="/quest/:questId" element={<QuestScreen />} />
+          <Route path="/rewards" element={<RewardsScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+        </Routes>
         <BottomNav />
       </div>
     </BrowserRouter>

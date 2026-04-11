@@ -4,58 +4,44 @@ export default function QuestCard({ quest, tasks }) {
   const navigate = useNavigate()
   const completedCount = tasks.filter((t) => t.completedToday).length
   const totalCount = tasks.length
-  const earnedXp = tasks.filter((t) => t.completedToday).reduce((sum, t) => sum + t.xpReward, 0)
+  const earnedCoins = tasks.filter((t) => t.completedToday).reduce((sum, t) => sum + t.coinReward, 0)
   const allDone = completedCount === totalCount && totalCount > 0
 
   return (
     <button
       onClick={() => navigate(`/quest/${quest.id}`)}
-      className="pixel-card w-full text-left p-4 transition-all active:scale-[0.98]"
+      className="card w-full text-left p-4 transition-all active:scale-[0.98]"
       style={{
-        borderColor: allDone ? 'var(--success)' : undefined,
-        boxShadow: allDone ? '0 0 10px rgba(20,184,166,0.15)' : undefined,
+        borderColor: allDone ? 'var(--green)' : undefined,
+        boxShadow: allDone ? '0 0 12px rgba(88,204,2,0.1)' : undefined,
       }}
     >
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-pixel text-[10px] flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-          {allDone ? '✅' : '📜'} {quest.name}
+      <div className="flex items-center justify-between mb-1.5">
+        <h3 className="text-sm font-extrabold flex items-center gap-1.5">
+          {allDone ? '✅' : '📋'} {quest.name}
         </h3>
-        <span
-          className="font-pixel text-[8px]"
-          style={{ color: allDone ? 'var(--success)' : 'var(--accent)' }}
-        >
+        <span className="text-xs font-bold" style={{ color: allDone ? 'var(--green)' : 'var(--text-dim)' }}>
           {completedCount}/{totalCount}
         </span>
       </div>
 
-      <p className="text-xs mb-3 italic" style={{ color: 'var(--text-secondary)' }}>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
         {quest.description}
       </p>
 
       <div className="flex items-center gap-2">
-        {/* Progress bar */}
-        <div className="flex-1 h-2.5 overflow-hidden" style={{ backgroundColor: 'rgba(148,163,184,0.15)' }}>
+        <div className="flex-1 progress-track" style={{ height: 8 }}>
           <div
-            className="h-full xp-bar-fill"
+            className="progress-fill"
             style={{
               width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%',
-              backgroundColor: allDone ? 'var(--success)' : 'var(--accent)',
-              boxShadow: allDone ? '0 0 6px rgba(20,184,166,0.4)' : undefined,
+              background: allDone ? 'var(--green)' : 'var(--blue)',
+              height: 8,
             }}
           />
         </div>
-
-        {/* XP earned */}
-        {earnedXp > 0 && (
-          <span
-            className="font-pixel text-[7px] flex-shrink-0"
-            style={{
-              color: 'var(--accent)',
-              textShadow: '0 0 4px rgba(245,158,11,0.3)',
-            }}
-          >
-            +{earnedXp} XP
-          </span>
+        {earnedCoins > 0 && (
+          <span className="coin-badge text-xs font-extrabold">🪙 +{earnedCoins}</span>
         )}
       </div>
     </button>
