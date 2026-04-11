@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import useGameStore from '../store/useGameStore'
 
 const tabs = [
   { path: '/', label: 'Today', icon: '⚡' },
@@ -11,7 +10,6 @@ const tabs = [
 export default function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
-  const euros = useGameStore((s) => s.euros)
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] flex"
@@ -31,10 +29,6 @@ export default function BottomNav() {
           </button>
         )
       })}
-      <div className="absolute -top-8 right-3 text-sm font-black px-3 py-1 rounded-full flex items-center gap-1"
-        style={{ background: 'var(--bg-card)', border: '2px solid var(--border)', color: '#FFC800' }}>
-        💶 €{euros}
-      </div>
     </nav>
   )
 }
