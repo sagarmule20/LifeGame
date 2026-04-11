@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import useGameStore from './store/useGameStore'
-import { supabase } from './lib/supabase'
+import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { syncToCloud, loadFromCloud } from './lib/sync'
 import { requestNotificationPermission, scheduleTaskNotifications } from './lib/notifications'
 import BottomNav from './components/BottomNav'
@@ -30,7 +30,6 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user)
-        // Try loading cloud data
         loadFromCloud(session.user.id).then((cloudData) => {
           if (cloudData) {
             useGameStore.setState({ ...cloudData, initialized: true })
@@ -40,14 +39,15 @@ export default function App() {
           resetDailyTasks()
         })
       } else {
-        // No session — check if already has local data (skipped auth before)
         const state = useGameStore.getState()
         if (state.initialized) {
-          // Already has local data, just reset daily
           resetDailyTasks()
-        } else {
-          // First time — show auth
+        } else if (isSupabaseConfigured) {
           setShowAuth(true)
+        } else {
+          // Supabase not configured — skip auth, go straight to app
+          initializeStore()
+          resetDailyTasks()
         }
       }
       setAuthReady(true)
