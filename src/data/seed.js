@@ -5,14 +5,14 @@ export const MANDATORY_MISSION_IDS = ['mission-health', 'mission-career', 'missi
 export const seedMissions = [
   { id: 'mission-health', name: 'Health & Fitness', icon: '💪', coinsEarned: 0, level: 0, color: '#58CC02' },
   { id: 'mission-career', name: 'Career & Skills', icon: '🚀', coinsEarned: 0, level: 0, color: '#1CB0F6' },
-  { id: 'mission-skills', name: 'Personal Growth', icon: '🎯', coinsEarned: 0, level: 0, color: '#CE82FF' },
+  { id: 'mission-skills', name: 'Personal Skills', icon: '🎯', coinsEarned: 0, level: 0, color: '#CE82FF' },
 ]
 
 // One quest per mission — keeps it flat and simple
 export const seedQuests = [
   { id: 'quest-health', missionId: 'mission-health', name: 'Health & Fitness', description: 'Daily health habits' },
   { id: 'quest-career', missionId: 'mission-career', name: 'Career & Skills', description: 'Professional growth' },
-  { id: 'quest-skills', missionId: 'mission-skills', name: 'Personal Growth', description: 'Learn and grow' },
+  { id: 'quest-skills', missionId: 'mission-skills', name: 'Personal Skills', description: 'Learn new skills and grow' },
 ]
 
 export const seedTasks = [
