@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { seedMissions, seedQuests, seedTasks } from '../data/seed'
+import { ACHIEVEMENTS, rollLoot } from '../data/achievements'
 
 const getTodayString = () => new Date().toLocaleDateString('en-CA')
 const getYesterdayString = () => {
@@ -17,6 +18,16 @@ const useGameStore = create(
       tasks: [],
       initialized: false,
 
+      // Achievement & loot tracking
+      unlockedAchievements: [], // array of achievement ids
+      inventory: [],            // collected loot items
+      totalTasksCompleted: 0,
+
+      // Event queue for UI animations (not persisted — set transiently)
+      _pendingLevelUp: null,
+      _pendingLoot: null,
+      _pendingAchievements: [],
+
       initializeStore: () => {
         if (get().initialized) return
         set({
@@ -24,11 +35,15 @@ const useGameStore = create(
           quests: seedQuests,
           tasks: seedTasks,
           initialized: true,
+          unlockedAchievements: [],
+          inventory: [],
+          totalTasksCompleted: 0,
         })
       },
 
       completeTask: (taskId) => {
-        const { tasks, quests, missions } = get()
+        const state = get()
+        const { tasks, quests, missions } = state
         const task = tasks.find((t) => t.id === taskId)
         if (!task || task.completedToday) return
 
@@ -43,17 +58,45 @@ const useGameStore = create(
         )
 
         const quest = quests.find((q) => q.id === task.questId)
+        const oldMission = missions.find((m) => m.id === quest.missionId)
+        const newXp = oldMission.xp + task.xpReward
+        const newLevel = Math.floor(newXp / 100)
+        const leveledUp = newLevel > oldMission.level
+
         const updatedMissions = missions.map((m) =>
           m.id === quest.missionId
-            ? {
-                ...m,
-                xp: m.xp + task.xpReward,
-                level: Math.floor((m.xp + task.xpReward) / 100),
-              }
+            ? { ...m, xp: newXp, level: newLevel }
             : m
         )
 
-        set({ tasks: updatedTasks, missions: updatedMissions })
+        // Roll for loot (30% chance, 100% on level up)
+        const loot = (leveledUp || Math.random() < 0.30) ? rollLoot() : null
+
+        // Check achievements
+        const newState = { ...state, tasks: updatedTasks, missions: updatedMissions }
+        const newAchievements = ACHIEVEMENTS.filter(
+          (a) => !state.unlockedAchievements.includes(a.id) && a.check(newState)
+        )
+
+        set({
+          tasks: updatedTasks,
+          missions: updatedMissions,
+          totalTasksCompleted: state.totalTasksCompleted + 1,
+          unlockedAchievements: [
+            ...state.unlockedAchievements,
+            ...newAchievements.map((a) => a.id),
+          ],
+          inventory: loot ? [...state.inventory, { ...loot, obtainedAt: Date.now() }] : state.inventory,
+          _pendingLevelUp: leveledUp
+            ? { missionName: oldMission.name, missionIcon: oldMission.icon, newLevel, missionColor: oldMission.color }
+            : null,
+          _pendingLoot: loot,
+          _pendingAchievements: newAchievements,
+        })
+      },
+
+      clearPendingEvents: () => {
+        set({ _pendingLevelUp: null, _pendingLoot: null, _pendingAchievements: [] })
       },
 
       uncompleteTask: (taskId) => {
@@ -104,7 +147,14 @@ const useGameStore = create(
         }))
       },
     }),
-    { name: 'life-game-storage' }
+    {
+      name: 'life-game-storage',
+      partialize: (state) => {
+        // Don't persist transient UI events
+        const { _pendingLevelUp, _pendingLoot, _pendingAchievements, ...rest } = state
+        return rest
+      },
+    }
   )
 )
 

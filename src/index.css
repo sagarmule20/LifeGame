@@ -17,6 +17,7 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 .font-pixel {
@@ -29,30 +30,179 @@ body {
   background-color: var(--bg-surface);
 }
 
+/* ===================== */
+/*  XP BAR              */
+/* ===================== */
+.xp-bar-fill {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===================== */
+/*  TASK DEFEAT ANIM    */
+/* ===================== */
 @keyframes task-flash {
   0% {
-    background-color: var(--success);
+    background-color: rgba(20, 184, 166, 0.3);
     transform: scale(1.02);
+  }
+  50% {
+    background-color: rgba(245, 158, 11, 0.15);
   }
   100% {
     background-color: transparent;
     transform: scale(1);
   }
 }
-
 .task-flash {
-  animation: task-flash 0.4s ease-out;
+  animation: task-flash 0.5s ease-out;
 }
 
-.xp-bar-fill {
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+@keyframes slash {
+  0% { transform: rotate(-45deg) scale(0); opacity: 1; }
+  50% { transform: rotate(-45deg) scale(1.2); opacity: 0.8; }
+  100% { transform: rotate(-45deg) scale(1); opacity: 0; }
+}
+.slash-effect {
+  animation: slash 0.4s ease-out forwards;
 }
 
-@keyframes xp-pulse {
+/* ===================== */
+/*  XP FLY UP           */
+/* ===================== */
+@keyframes flyUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-40px) scale(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-80px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* ===================== */
+/*  CONFETTI             */
+/* ===================== */
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* ===================== */
+/*  LEVEL UP MODAL       */
+/* ===================== */
+@keyframes levelNumber {
+  0% { transform: scale(3); opacity: 0; }
+  60% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes starPop {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.screen-shake {
+  animation: shakeIt 0.5s ease-in-out;
+}
+
+@keyframes shakeIt {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-8px) rotate(-1deg); }
+  20% { transform: translateX(8px) rotate(1deg); }
+  30% { transform: translateX(-6px) rotate(-0.5deg); }
+  40% { transform: translateX(6px) rotate(0.5deg); }
+  50% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  70% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+/* ===================== */
+/*  LOOT DROP            */
+/* ===================== */
+@keyframes chestShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes itemReveal {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* ===================== */
+/*  BOUNCE & PULSE       */
+/* ===================== */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.5; }
 }
 
-.xp-pulse {
-  animation: xp-pulse 0.3s ease-in-out 2;
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 5px currentColor); }
+  50% { filter: drop-shadow(0 0 15px currentColor); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ===================== */
+/*  ZONE MAP EFFECTS     */
+/* ===================== */
+@keyframes zoneGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--zone-color)); }
+  50% { filter: drop-shadow(0 0 12px var(--zone-color)); }
+}
+
+@keyframes cloudDrift {
+  0% { transform: translateX(-20px); opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { transform: translateX(20px); opacity: 0.3; }
+}
+
+/* ===================== */
+/*  QUEST BOARD          */
+/* ===================== */
+@keyframes questAppear {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.quest-appear {
+  animation: questAppear 0.4s ease-out backwards;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
 }
