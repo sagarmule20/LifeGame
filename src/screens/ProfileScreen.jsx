@@ -202,7 +202,11 @@ function MissionsManager({ missions, quests, tasks, euros, onAddTemplate, onRemo
   const [expanded, setExpanded] = useState(null) // missionId or null
   const [newTaskName, setNewTaskName] = useState('')
   const [addingToQuest, setAddingToQuest] = useState(null) // questId
+  const [editingTask, setEditingTask] = useState(null) // taskId
+  const [editName, setEditName] = useState('')
   const addTask = useGameStore((s) => s.addTask)
+  const deleteTask = useGameStore((s) => s.deleteTask)
+  const renameTask = useGameStore((s) => s.renameTask)
   const inputRef = useRef(null)
 
   const toggle = (id) => setExpanded(expanded === id ? null : id)
@@ -258,12 +262,37 @@ function MissionsManager({ missions, quests, tasks, euros, onAddTemplate, onRemo
               const firstQuestId = missionQuests[0]?.id
               return (
               <div style={{ borderTop: '1px solid var(--border)' }}>
-                {/* All tasks flat */}
+                {/* All tasks flat — with rename/delete */}
                 {missionTasks.map((t) => (
                   <div key={t.id} className="flex items-center gap-2 py-2 px-4" style={{ borderBottom: '1px solid var(--border)' }}>
-                    <span className="text-[10px]">{t.completedToday ? '✅' : '⬜'}</span>
-                    <span className="text-xs flex-1 truncate" style={{ color: 'var(--text)' }}>{t.name}</span>
-                    <span className="text-[10px] font-bold" style={{ color: '#FFC800' }}>€5</span>
+                    {editingTask === t.id ? (
+                      <>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && editName.trim()) { renameTask(t.id, editName.trim()); setEditingTask(null) }
+                            if (e.key === 'Escape') setEditingTask(null)
+                          }}
+                          className="flex-1 bg-transparent text-xs font-bold outline-none"
+                          style={{ color: 'var(--text)', borderBottom: '1px solid var(--green)', paddingBottom: 2 }}
+                          autoFocus
+                        />
+                        <button onClick={() => { if (editName.trim()) { renameTask(t.id, editName.trim()); setEditingTask(null) } }}
+                          className="text-[10px] font-extrabold px-2 py-0.5 rounded" style={{ background: 'var(--green)', color: '#fff' }}>OK</button>
+                        <button onClick={() => setEditingTask(null)} className="text-[10px]" style={{ color: 'var(--text-muted)' }}>✕</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[10px]">{t.completedToday ? '✅' : '⬜'}</span>
+                        <span className="text-xs flex-1 truncate" style={{ color: 'var(--text)' }}>{t.name}</span>
+                        <button onClick={() => { setEditingTask(t.id); setEditName(t.name) }}
+                          className="text-[10px] px-1" style={{ color: 'var(--text-muted)' }}>✏️</button>
+                        <button onClick={() => { if (confirm(`Delete "${t.name}"?`)) deleteTask(t.id) }}
+                          className="text-[10px] px-1" style={{ color: 'var(--red)' }}>🗑️</button>
+                      </>
+                    )}
                   </div>
                 ))}
 

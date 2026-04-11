@@ -53,7 +53,7 @@ export default function LeaderboardScreen() {
         <div className="flex items-center gap-3">
           <span className="text-3xl">{myRank.icon}</span>
           <div className="flex-1">
-            <p className="text-sm font-extrabold" style={{ color: myRank.color }}>{myRank.name}</p>
+            <p className="text-sm font-extrabold" style={{ color: myRank.color }}>You are currently {myRank.name === 'Intern' ? 'an' : 'a'} {myRank.name}</p>
             <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{myRank.tagline}</p>
           </div>
           <div className="text-right">

@@ -12,8 +12,8 @@ export async function syncToCloud(userId, state) {
     // Upsert profile
     await supabase.from('profiles').upsert({
       id: userId,
-      coins: state.coins,
-      total_coins_earned: state.totalCoinsEarned,
+      coins: state.euros,
+      total_coins_earned: state.totalEurosEarned,
       total_tasks_completed: state.totalTasksCompleted,
       updated_at: new Date().toISOString(),
     })
@@ -106,8 +106,8 @@ export async function loadFromCloud(userId) {
     if (!missionsRes.data?.length) return null
 
     return {
-      coins: profileRes.data?.coins || 0,
-      totalCoinsEarned: profileRes.data?.total_coins_earned || 0,
+      euros: profileRes.data?.coins || 0,
+      totalEurosEarned: profileRes.data?.total_coins_earned || 0,
       totalTasksCompleted: profileRes.data?.total_tasks_completed || 0,
       missions: missionsRes.data.map((m) => ({
         id: m.id, name: m.name, icon: m.icon, color: m.color,

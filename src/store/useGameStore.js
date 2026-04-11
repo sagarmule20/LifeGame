@@ -122,7 +122,7 @@ const useGameStore = create(
         const today = getTodayString()
         const updatedLog = { ...state.dailyLog, [today]: Math.max(0, (state.dailyLog[today] || 0) - EURO_PER_TASK) }
         set({
-          tasks: state.tasks.map((t) => t.id === taskId ? { ...t, completedToday: false } : t),
+          tasks: state.tasks.map((t) => t.id === taskId ? { ...t, completedToday: false, streak: 0 } : t),
           euros: Math.max(0, state.euros - EURO_PER_TASK),
           totalEurosEarned: Math.max(0, state.totalEurosEarned - EURO_PER_TASK),
           totalTasksCompleted: Math.max(0, state.totalTasksCompleted - 1),
@@ -198,6 +198,14 @@ const useGameStore = create(
             streak: 0, lastCompletedDate: null, completedToday: false, scheduledTime,
           }],
         }))
+      },
+
+      deleteTask: (taskId) => {
+        set((s) => ({ tasks: s.tasks.filter((t) => t.id !== taskId) }))
+      },
+
+      renameTask: (taskId, newName) => {
+        set((s) => ({ tasks: s.tasks.map((t) => t.id === taskId ? { ...t, name: newName } : t) }))
       },
 
       updateTaskTime: (taskId, scheduledTime) => {
