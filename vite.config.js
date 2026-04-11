@@ -13,27 +13,35 @@ export default defineConfig({
       manifest: {
         name: 'Life Game',
         short_name: 'LifeGame',
-        description: 'A gamified life tracker where real-life tasks are RPG missions',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        description: 'A gamified life tracker — earn €5 per task',
+        theme_color: '#131F24',
+        background_color: '#131F24',
         display: 'standalone',
         start_url: '/',
         icons: [
-          {
-            src: 'icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable',
-          },
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Force new service worker to activate immediately
+        skipWaiting: true,
+        clientsClaim: true,
+        // Don't precache index.html — always fetch fresh
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/],
+        // Cache-first for assets (hashed filenames), network-first for navigation
+        runtimeCaching: [
+          {
+            urlPattern: /\.(?:js|css|woff2)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'static-assets',
+              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+        ],
       },
     }),
   ],
