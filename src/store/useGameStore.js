@@ -94,7 +94,6 @@ const useGameStore = create(
           (a) => !state.unlockedAchievements.includes(a.id) && a.check(newState)
         )
 
-        const today = getTodayString()
         const updatedLog = { ...state.dailyLog, [today]: (state.dailyLog[today] || 0) + EURO_PER_TASK }
 
         set({
@@ -162,7 +161,6 @@ const useGameStore = create(
             completedToday: false,
             scheduledTime: null,
           }))
-        )
 
         set({
           missions: [...state.missions, { id: missionId, name: template.name, icon: template.icon, color: template.color, coinsEarned: 0, level: 0 }],
