@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useGameStore from '../store/useGameStore'
 import { supabase } from '../lib/supabase'
+import { isSupabaseConfigured } from '../lib/supabase'
 import { syncToCloud } from '../lib/sync'
 import { getRank, getNextRank, RANKS } from '../data/ranks'
 import { MISSION_TEMPLATES } from '../data/ranks'
@@ -18,13 +20,17 @@ export default function ProfileScreen() {
   const inventory = useGameStore((s) => s.inventory)
   const user = useGameStore((s) => s.user)
   const setUser = useGameStore((s) => s.setUser)
+  const dailyLog = useGameStore((s) => s.dailyLog)
   const addMissionFromTemplate = useGameStore((s) => s.addMissionFromTemplate)
   const removeMission = useGameStore((s) => s.removeMission)
+  const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState('missions')
   const [syncing, setSyncing] = useState(false)
 
   const allQuests = useGameStore((s) => s.quests)
+  const today = new Date().toLocaleDateString('en-CA')
+  const todayEarned = dailyLog?.[today] || 0
   const rank = getRank(totalEurosEarned)
   const nextRank = getNextRank(totalEurosEarned)
   const freeSlotsLeft = Math.max(0, 4 - missions.length)
@@ -80,21 +86,20 @@ export default function ProfileScreen() {
         )}
       </div>
 
-      {/* Quick stats */}
-      <div className="flex gap-2 mb-4">
-        <div className="card flex-1 p-3 text-center">
-          <p className="text-lg font-black" style={{ color: '#FFC800' }}>€{totalEurosEarned}</p>
-          <p className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>lifetime</p>
+      {/* Daily earnings card — tap to see history */}
+      <button onClick={() => navigate('/earnings')} className="card w-full p-4 mb-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform">
+        <div className="text-3xl">📊</div>
+        <div className="flex-1">
+          <p className="text-sm font-extrabold">Today's earnings</p>
+          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
+            {totalTasksCompleted} tasks completed all time
+          </p>
         </div>
-        <div className="card flex-1 p-3 text-center">
-          <p className="text-lg font-black" style={{ color: 'var(--green)' }}>{totalTasksCompleted}</p>
-          <p className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>tasks done</p>
+        <div className="text-right">
+          <p className="text-lg font-black" style={{ color: '#FFC800' }}>€{todayEarned}</p>
+          <p className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>today</p>
         </div>
-        <div className="card flex-1 p-3 text-center">
-          <p className="text-lg font-black" style={{ color: 'var(--blue)' }}>{missions.length}</p>
-          <p className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>missions</p>
-        </div>
-      </div>
+      </button>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-4">
@@ -145,12 +150,6 @@ export default function ProfileScreen() {
             )
           })}
 
-          {/* Account */}
-          <div className="space-y-2 mt-4">
-            {user && <button onClick={handleSync} className="btn btn-blue w-full py-3 text-sm" disabled={syncing}>{syncing ? 'Syncing...' : '☁️ SYNC TO CLOUD'}</button>}
-            {user ? <button onClick={handleLogout} className="btn btn-ghost w-full py-3 text-sm">LOG OUT</button>
-              : <button onClick={() => window.location.reload()} className="btn btn-green w-full py-3 text-sm">SIGN IN TO SAVE PROGRESS</button>}
-          </div>
         </div>
       )}
 
@@ -173,6 +172,24 @@ export default function ProfileScreen() {
           })}
         </div>
       )}
+
+      {/* Account section — always at bottom */}
+      <div className="mt-8 space-y-2 pb-4" style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+        {user && isSupabaseConfigured && (
+          <button onClick={handleSync} className="btn btn-blue w-full py-3 text-sm" disabled={syncing}>
+            {syncing ? 'Syncing...' : '☁️ SYNC TO CLOUD'}
+          </button>
+        )}
+        {user ? (
+          <button onClick={handleLogout} className="btn w-full py-3 text-sm" style={{ background: 'var(--bg)', color: 'var(--red)', border: '2px solid var(--red)' }}>
+            LOG OUT
+          </button>
+        ) : (
+          <button onClick={() => window.location.reload()} className="btn btn-green w-full py-3 text-sm">
+            SIGN IN TO SAVE PROGRESS
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -319,7 +336,7 @@ function MissionsManager({ missions, quests, tasks, euros, onAddTemplate, onRemo
             <div className="flex-1">
               <p className="text-sm font-bold">{tmpl.name}</p>
               <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                {tmpl.quests.length} quests • {tmpl.quests.reduce((s, q) => s + q.tasks.length, 0)} tasks
+                {tmpl.tasks.length} tasks
               </p>
             </div>
             <button onClick={() => onAddTemplate(tmpl)} disabled={alreadyAdded}

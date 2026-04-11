@@ -33,6 +33,7 @@ const useGameStore = create(
       rewards: [],
       unlockedAchievements: [],
       inventory: [],
+      dailyLog: {}, // { 'YYYY-MM-DD': amountEarned }
 
       // Transient UI events
       _pendingLevelUp: null,
@@ -53,6 +54,7 @@ const useGameStore = create(
           unlockedAchievements: [],
           inventory: [],
           rewards: [],
+          dailyLog: {},
         })
       },
 
@@ -92,11 +94,15 @@ const useGameStore = create(
           (a) => !state.unlockedAchievements.includes(a.id) && a.check(newState)
         )
 
+        const today = getTodayString()
+        const updatedLog = { ...state.dailyLog, [today]: (state.dailyLog[today] || 0) + EURO_PER_TASK }
+
         set({
           tasks: updatedTasks,
           euros: newEuros,
           totalEurosEarned: newTotalEarned,
           totalTasksCompleted: state.totalTasksCompleted + 1,
+          dailyLog: updatedLog,
           unlockedAchievements: [...state.unlockedAchievements, ...newAchievements.map((a) => a.id)],
           inventory: loot ? [...state.inventory, { ...loot, obtainedAt: Date.now() }] : state.inventory,
           _pendingEarning: { amount: EURO_PER_TASK, taskName: task.name, missionIcon: mission.icon },
@@ -111,12 +117,17 @@ const useGameStore = create(
       clearPendingEvents: () => set({ _pendingLevelUp: null, _pendingLoot: null, _pendingAchievements: [], _pendingEarning: null }),
 
       uncompleteTask: (taskId) => {
-        const { tasks, euros } = get()
-        const task = tasks.find((t) => t.id === taskId)
+        const state = get()
+        const task = state.tasks.find((t) => t.id === taskId)
         if (!task || !task.completedToday) return
+        const today = getTodayString()
+        const updatedLog = { ...state.dailyLog, [today]: Math.max(0, (state.dailyLog[today] || 0) - EURO_PER_TASK) }
         set({
-          tasks: tasks.map((t) => t.id === taskId ? { ...t, completedToday: false } : t),
-          euros: Math.max(0, euros - EURO_PER_TASK),
+          tasks: state.tasks.map((t) => t.id === taskId ? { ...t, completedToday: false } : t),
+          euros: Math.max(0, state.euros - EURO_PER_TASK),
+          totalEurosEarned: Math.max(0, state.totalEurosEarned - EURO_PER_TASK),
+          totalTasksCompleted: Math.max(0, state.totalTasksCompleted - 1),
+          dailyLog: updatedLog,
         })
       },
 
@@ -134,24 +145,16 @@ const useGameStore = create(
 
       addMissionFromTemplate: (template) => {
         const state = get()
-        // The 3 mandatory are free; anything beyond that costs €50
-        const extraMissions = state.missions.length - FREE_MISSION_COUNT
-        const isFree = extraMissions < 0 // shouldn't happen, but safety
         const needsPayment = state.missions.length >= FREE_MISSION_COUNT
-
         if (needsPayment && state.euros < MISSION_COST) return false
 
         const missionId = 'mission-' + Date.now()
-        const newQuests = template.quests.map((q, qi) => ({
-          id: `quest-${Date.now()}-${qi}`,
-          missionId,
-          name: q.name,
-          description: q.description,
-        }))
-        const newTasks = template.quests.flatMap((q, qi) =>
-          q.tasks.map((taskName, ti) => ({
-            id: `task-${Date.now()}-${qi}-${ti}`,
-            questId: newQuests[qi].id,
+        // Flat structure: one quest per mission, all tasks go under it
+        const questId = `quest-${Date.now()}`
+        const newQuest = { id: questId, missionId, name: template.name, description: template.description || '' }
+        const newTasks = template.tasks.map((taskName, ti) => ({
+            id: `task-${Date.now()}-${ti}`,
+            questId,
             name: taskName,
             coinReward: EURO_PER_TASK,
             streak: 0,
@@ -163,7 +166,7 @@ const useGameStore = create(
 
         set({
           missions: [...state.missions, { id: missionId, name: template.name, icon: template.icon, color: template.color, coinsEarned: 0, level: 0 }],
-          quests: [...state.quests, ...newQuests],
+          quests: [...state.quests, newQuest],
           tasks: [...state.tasks, ...newTasks],
           euros: needsPayment ? state.euros - MISSION_COST : state.euros,
         })

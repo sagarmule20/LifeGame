@@ -33,43 +33,41 @@ export function getNextRank(totalEarned) {
 }
 
 // Additional mission templates the user can buy (€50 each)
-// The 3 mandatory missions (Health, Career, Finance) are always free and seeded.
+// Flat structure — just a name, icon, color, and task list. No sub-quests.
 export const MISSION_TEMPLATES = [
   {
     name: 'Mind & Wellness',
     icon: '🧠',
-    color: '#CE82FF',
-    quests: [
-      { name: 'Bookworm', description: 'Expand your mind through reading', tasks: ['Read for 30 minutes'] },
-      { name: 'Inner Peace', description: 'Find calm through meditation', tasks: ['Meditate 10 minutes', 'Breathing exercise'] },
-      { name: 'Journal', description: 'Reflect and grow', tasks: ['Write journal entry', 'Gratitude list'] },
-    ],
+    color: '#58CC02',
+    description: 'Mental health and mindfulness',
+    tasks: ['Meditate 10 minutes', 'Write journal entry', 'Gratitude list', 'Breathing exercise'],
   },
   {
     name: 'Social & Relationships',
     icon: '❤️',
     color: '#FF4B4B',
-    quests: [
-      { name: 'Stay Connected', description: 'Nurture your relationships', tasks: ['Call a friend/family', 'Plan a meetup'] },
-      { name: 'Give Back', description: 'Help others around you', tasks: ['Random act of kindness', 'Volunteer time'] },
-    ],
+    description: 'Stay connected with people',
+    tasks: ['Call a friend or family', 'Plan a meetup', 'Random act of kindness'],
   },
   {
     name: 'Creative',
     icon: '🎨',
     color: '#FF86D0',
-    quests: [
-      { name: 'Create Daily', description: 'Express yourself every day', tasks: ['Draw/sketch something', 'Write creatively'] },
-      { name: 'Music', description: 'Practice your instrument', tasks: ['Practice 30 minutes', 'Learn a new song'] },
-    ],
+    description: 'Express yourself daily',
+    tasks: ['Draw or sketch something', 'Write creatively', 'Practice instrument 30 min'],
   },
   {
     name: 'Home & Organization',
     icon: '🏠',
     color: '#FF9600',
-    quests: [
-      { name: 'Clean Space', description: 'Keep your space tidy', tasks: ['15-min cleanup', 'Organize one area'] },
-      { name: 'Cooking', description: 'Eat well, live well', tasks: ['Cook a healthy meal', 'Meal prep'] },
-    ],
+    description: 'Keep your space and life tidy',
+    tasks: ['15-min cleanup', 'Organize one area', 'Cook a healthy meal', 'Meal prep'],
+  },
+  {
+    name: 'Finance',
+    icon: '💰',
+    color: '#FFC800',
+    description: 'Stay on top of your money',
+    tasks: ['Review expenses', 'Track spending', 'Transfer to savings'],
   },
 ]

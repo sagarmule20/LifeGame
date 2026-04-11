@@ -14,6 +14,7 @@ import DailyScreen from './screens/DailyScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import RewardsScreen from './screens/RewardsScreen'
 import LeaderboardScreen from './screens/LeaderboardScreen'
+import EarningsScreen from './screens/EarningsScreen'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
 
 export default function App() {
@@ -129,6 +130,7 @@ export default function App() {
           <Route path="/quest/:questId" element={<QuestScreen />} />
           <Route path="/rewards" element={<RewardsScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
+          <Route path="/earnings" element={<EarningsScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
         </Routes>
         <BottomNav />
