@@ -5,7 +5,7 @@ import { ACHIEVEMENTS, rollLoot } from '../data/achievements'
 import { getRank, RANKS } from '../data/ranks'
 
 const EURO_PER_TASK = 5
-const FREE_MISSION_COUNT = 3 // Health, Career, Finance — always free
+const FREE_MISSION_COUNT = 3 // Health, Career, Personal Skills — always free
 const MISSION_COST = 50
 
 const getTodayString = () => new Date().toLocaleDateString('en-CA')

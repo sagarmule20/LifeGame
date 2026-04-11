@@ -63,11 +63,4 @@ export const MISSION_TEMPLATES = [
     description: 'Keep your space and life tidy',
     tasks: ['15-min cleanup', 'Organize one area', 'Cook a healthy meal', 'Meal prep'],
   },
-  {
-    name: 'Finance',
-    icon: '💰',
-    color: '#FFC800',
-    description: 'Stay on top of your money',
-    tasks: ['Review expenses', 'Track spending', 'Transfer to savings'],
-  },
 ]
