@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(Date.now().toString()),
+  },
   plugins: [
     react(),
     tailwindcss(),
