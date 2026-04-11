@@ -1,0 +1,58 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #0f172a;
+  --bg-surface: #1e293b;
+  --accent: #f59e0b;
+  --success: #14b8a6;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-pixel {
+  font-family: 'Press Start 2P', cursive;
+}
+
+.pixel-card {
+  border: 3px solid var(--accent);
+  border-radius: 0;
+  background-color: var(--bg-surface);
+}
+
+@keyframes task-flash {
+  0% {
+    background-color: var(--success);
+    transform: scale(1.02);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+.task-flash {
+  animation: task-flash 0.4s ease-out;
+}
+
+.xp-bar-fill {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes xp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.xp-pulse {
+  animation: xp-pulse 0.3s ease-in-out 2;
+}

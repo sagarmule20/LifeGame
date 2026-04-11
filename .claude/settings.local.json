@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c:*)",
+      "Bash(npm create:*)",
+      "Bash(npx --yes create-vite@latest . --template react)",
+      "Read(//c/Users/sagar.mule/Documents/vibecoding/**)",
+      "Bash(npx --yes create-vite@latest LifeGame2 --template react)",
+      "Bash(cp -r /c/Users/sagar.mule/Documents/vibecoding/LifeGame2/* /c/Users/sagar.mule/Documents/vibecoding/LifeGame/)",
+      "Bash(cp /c/Users/sagar.mule/Documents/vibecoding/LifeGame2/.gitignore /c/Users/sagar.mule/Documents/vibecoding/LifeGame/)",
+      "Bash(cp /c/Users/sagar.mule/Documents/vibecoding/LifeGame2/.eslintrc* /c/Users/sagar.mule/Documents/vibecoding/LifeGame/)",
+      "Bash(rm -rf /c/Users/sagar.mule/Documents/vibecoding/LifeGame2)",
+      "Bash(npm install:*)",
+      "Bash(git init:*)",
+      "Bash(git remote:*)",
+      "Bash(node -e \":*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
