@@ -245,7 +245,7 @@ function MissionsManager({ missions, quests, tasks, euros, onAddTemplate, onRemo
                   )}
                 </div>
                 <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  {missionQuests.length} quests • {missionTasks.length} tasks
+                  {missionTasks.length} tasks
                 </p>
               </div>
               <span className="text-sm" style={{ color: 'var(--text-muted)', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
@@ -253,61 +253,51 @@ function MissionsManager({ missions, quests, tasks, euros, onAddTemplate, onRemo
               </span>
             </button>
 
-            {/* Expanded content — quests + tasks + add */}
-            {isExpanded && (
+            {/* Expanded — flat task list + add */}
+            {isExpanded && (() => {
+              const firstQuestId = missionQuests[0]?.id
+              return (
               <div style={{ borderTop: '1px solid var(--border)' }}>
-                {missionQuests.map((q) => {
-                  const questTasks = tasks.filter((t) => t.questId === q.id)
-                  return (
-                    <div key={q.id} className="px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                      {/* Quest name */}
-                      <p className="text-xs font-extrabold mb-1" style={{ color: 'var(--text-dim)' }}>
-                        📋 {q.name}
-                      </p>
+                {/* All tasks flat */}
+                {missionTasks.map((t) => (
+                  <div key={t.id} className="flex items-center gap-2 py-2 px-4" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <span className="text-[10px]">{t.completedToday ? '✅' : '⬜'}</span>
+                    <span className="text-xs flex-1 truncate" style={{ color: 'var(--text)' }}>{t.name}</span>
+                    <span className="text-[10px] font-bold" style={{ color: '#FFC800' }}>€5</span>
+                  </div>
+                ))}
 
-                      {/* Tasks under this quest */}
-                      {questTasks.map((t) => (
-                        <div key={t.id} className="flex items-center gap-2 py-1 pl-4">
-                          <span className="text-[10px]">{t.completedToday ? '✅' : '⬜'}</span>
-                          <span className="text-xs flex-1 truncate" style={{ color: 'var(--text)' }}>{t.name}</span>
-                          <span className="text-[10px] font-bold" style={{ color: '#FFC800' }}>€5</span>
-                        </div>
-                      ))}
-
-                      {/* Add task to this quest */}
-                      {addingToQuest === q.id ? (
-                        <div className="flex items-center gap-2 pl-4 py-1.5">
-                          <input
-                            ref={inputRef}
-                            type="text"
-                            placeholder="New task name..."
-                            value={newTaskName}
-                            onChange={(e) => setNewTaskName(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddTask(q.id); if (e.key === 'Escape') { setAddingToQuest(null); setNewTaskName('') } }}
-                            className="flex-1 bg-transparent text-xs font-bold outline-none"
-                            style={{ color: 'var(--text)', borderBottom: '1px solid var(--green)', paddingBottom: 2 }}
-                            autoFocus
-                          />
-                          <button onClick={() => handleAddTask(q.id)}
-                            className="text-[10px] font-extrabold px-2 py-1 rounded-lg"
-                            style={{ background: 'var(--green)', color: '#fff' }}>
-                            ADD
-                          </button>
-                          <button onClick={() => { setAddingToQuest(null); setNewTaskName('') }}
-                            className="text-[10px]" style={{ color: 'var(--text-muted)' }}>✕</button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => { setAddingToQuest(q.id); setNewTaskName('') }}
-                          className="flex items-center gap-1.5 pl-4 py-1.5 text-xs font-bold w-full text-left active:scale-[0.98]"
-                          style={{ color: 'var(--green)' }}
-                        >
-                          <span>＋</span> Add task
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
+                {/* Add task */}
+                {addingToQuest === firstQuestId ? (
+                  <div className="flex items-center gap-2 px-4 py-2.5">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      placeholder="New task name..."
+                      value={newTaskName}
+                      onChange={(e) => setNewTaskName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleAddTask(firstQuestId); if (e.key === 'Escape') { setAddingToQuest(null); setNewTaskName('') } }}
+                      className="flex-1 bg-transparent text-xs font-bold outline-none"
+                      style={{ color: 'var(--text)', borderBottom: '1px solid var(--green)', paddingBottom: 2 }}
+                      autoFocus
+                    />
+                    <button onClick={() => handleAddTask(firstQuestId)}
+                      className="text-[10px] font-extrabold px-2 py-1 rounded-lg"
+                      style={{ background: 'var(--green)', color: '#fff' }}>
+                      ADD
+                    </button>
+                    <button onClick={() => { setAddingToQuest(null); setNewTaskName('') }}
+                      className="text-[10px]" style={{ color: 'var(--text-muted)' }}>✕</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setAddingToQuest(firstQuestId); setNewTaskName('') }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold w-full text-left active:scale-[0.98]"
+                    style={{ color: 'var(--green)' }}
+                  >
+                    <span>＋</span> Add task
+                  </button>
+                )}
 
                 {/* Remove mission (non-mandatory only) */}
                 {!isMandatory && (
@@ -319,7 +309,8 @@ function MissionsManager({ missions, quests, tasks, euros, onAddTemplate, onRemo
                   </div>
                 )}
               </div>
-            )}
+              )
+            })()}
           </div>
         )
       })}
