@@ -32,18 +32,9 @@ export function getNextRank(totalEarned) {
   return null // Already at max
 }
 
+// Additional mission templates the user can buy (€50 each)
+// The 3 mandatory missions (Health, Career, Finance) are always free and seeded.
 export const MISSION_TEMPLATES = [
-  {
-    name: 'Health & Fitness',
-    icon: '💪',
-    color: '#58CC02',
-    quests: [
-      { name: 'Gym Warrior', description: 'Build strength through consistent workouts', tasks: ['Complete workout', 'Stretching session'] },
-      { name: 'Hydration', description: 'Stay hydrated throughout the day', tasks: ['Drink 8 cups of water'] },
-      { name: 'Sleep Mastery', description: 'Optimize rest and recovery', tasks: ['Sleep 8 hours', 'No screens 1hr before bed'] },
-      { name: 'Active Living', description: 'Keep moving every day', tasks: ['Walk 30 minutes', '10,000 steps'] },
-    ],
-  },
   {
     name: 'Mind & Wellness',
     icon: '🧠',
@@ -52,25 +43,6 @@ export const MISSION_TEMPLATES = [
       { name: 'Bookworm', description: 'Expand your mind through reading', tasks: ['Read for 30 minutes'] },
       { name: 'Inner Peace', description: 'Find calm through meditation', tasks: ['Meditate 10 minutes', 'Breathing exercise'] },
       { name: 'Journal', description: 'Reflect and grow', tasks: ['Write journal entry', 'Gratitude list'] },
-    ],
-  },
-  {
-    name: 'Career & Skills',
-    icon: '🚀',
-    color: '#1CB0F6',
-    quests: [
-      { name: 'Deep Focus', description: 'Achieve flow with deep work', tasks: ['2-hour deep work session'] },
-      { name: 'Skill Up', description: 'Level up professional skills', tasks: ['Learn for 1 hour', 'Online course lesson'] },
-      { name: 'Ship It', description: 'Deliver real results', tasks: ['Ship a feature/PR', 'Code review'] },
-    ],
-  },
-  {
-    name: 'Finance',
-    icon: '💰',
-    color: '#FFC800',
-    quests: [
-      { name: 'Budget Check', description: 'Stay on top of your money', tasks: ['Review expenses', 'Track spending'] },
-      { name: 'Save & Invest', description: 'Build wealth over time', tasks: ['Transfer to savings', 'Check investments'] },
     ],
   },
   {

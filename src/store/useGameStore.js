@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { seedMissions, seedQuests, seedTasks } from '../data/seed'
+import { seedMissions, seedQuests, seedTasks, MANDATORY_MISSION_IDS } from '../data/seed'
 import { ACHIEVEMENTS, rollLoot } from '../data/achievements'
+import { getRank, RANKS } from '../data/ranks'
 
 const EURO_PER_TASK = 5
-const FREE_MISSION_LIMIT = 4
+const FREE_MISSION_COUNT = 3 // Health, Career, Finance — always free
 const MISSION_COST = 50
 
 const getTodayString = () => new Date().toLocaleDateString('en-CA')
@@ -25,15 +26,11 @@ const useGameStore = create(
       tasks: [],
       initialized: false,
 
-      // Euro balance
       euros: 0,
       totalEurosEarned: 0,
       totalTasksCompleted: 0,
 
-      // Rewards shop
       rewards: [],
-
-      // Achievements & inventory
       unlockedAchievements: [],
       inventory: [],
 
@@ -41,7 +38,7 @@ const useGameStore = create(
       _pendingLevelUp: null,
       _pendingLoot: null,
       _pendingAchievements: [],
-      _pendingEarning: null, // { amount, taskName, missionName }
+      _pendingEarning: null,
 
       initializeStore: () => {
         if (get().initialized) return
@@ -81,10 +78,10 @@ const useGameStore = create(
         const newEuros = euros + EURO_PER_TASK
         const newTotalEarned = totalEurosEarned + EURO_PER_TASK
 
-        // Simple rank-up check: compare floor-based slab thresholds
-        const slabs = [0, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 25000, 50000]
-        const getSlabIndex = (v) => { let i = 0; for (const s of slabs) { if (v >= s) i = slabs.indexOf(s); } return i }
-        const rankedUp = getSlabIndex(newTotalEarned) > getSlabIndex(totalEurosEarned)
+        // Rank-up check
+        const oldRank = getRank(totalEurosEarned)
+        const newRank = getRank(newTotalEarned)
+        const rankedUp = newRank.name !== oldRank.name
 
         // Loot: 20% chance, 100% on rank up
         const loot = (rankedUp || Math.random() < 0.20) ? rollLoot() : null
@@ -103,7 +100,9 @@ const useGameStore = create(
           unlockedAchievements: [...state.unlockedAchievements, ...newAchievements.map((a) => a.id)],
           inventory: loot ? [...state.inventory, { ...loot, obtainedAt: Date.now() }] : state.inventory,
           _pendingEarning: { amount: EURO_PER_TASK, taskName: task.name, missionIcon: mission.icon },
-          _pendingLevelUp: rankedUp ? { missionName: newRank.name, missionIcon: newRank.icon, newLevel: newRank.name, missionColor: newRank.color } : null,
+          _pendingLevelUp: rankedUp
+            ? { missionName: newRank.name, missionIcon: newRank.icon, newLevel: newRank.name, missionColor: newRank.color }
+            : null,
           _pendingLoot: loot,
           _pendingAchievements: newAchievements,
         })
@@ -131,13 +130,16 @@ const useGameStore = create(
       },
 
       // Mission management
-      canAddFreeMission: () => get().missions.length < FREE_MISSION_LIMIT,
-      getMissionCost: () => MISSION_COST,
+      isMandatory: (missionId) => MANDATORY_MISSION_IDS.includes(missionId),
 
       addMissionFromTemplate: (template) => {
         const state = get()
-        const isFree = state.missions.length < FREE_MISSION_LIMIT
-        if (!isFree && state.euros < MISSION_COST) return false
+        // The 3 mandatory are free; anything beyond that costs €50
+        const extraMissions = state.missions.length - FREE_MISSION_COUNT
+        const isFree = extraMissions < 0 // shouldn't happen, but safety
+        const needsPayment = state.missions.length >= FREE_MISSION_COUNT
+
+        if (needsPayment && state.euros < MISSION_COST) return false
 
         const missionId = 'mission-' + Date.now()
         const newQuests = template.quests.map((q, qi) => ({
@@ -163,12 +165,14 @@ const useGameStore = create(
           missions: [...state.missions, { id: missionId, name: template.name, icon: template.icon, color: template.color, coinsEarned: 0, level: 0 }],
           quests: [...state.quests, ...newQuests],
           tasks: [...state.tasks, ...newTasks],
-          euros: isFree ? state.euros : state.euros - MISSION_COST,
+          euros: needsPayment ? state.euros - MISSION_COST : state.euros,
         })
         return true
       },
 
       removeMission: (missionId) => {
+        // Cannot remove mandatory missions
+        if (MANDATORY_MISSION_IDS.includes(missionId)) return false
         const state = get()
         const questIds = state.quests.filter((q) => q.missionId === missionId).map((q) => q.id)
         set({
@@ -176,6 +180,7 @@ const useGameStore = create(
           quests: state.quests.filter((q) => q.missionId !== missionId),
           tasks: state.tasks.filter((t) => !questIds.includes(t.questId)),
         })
+        return true
       },
 
       addQuest: (missionId, name, description) => {

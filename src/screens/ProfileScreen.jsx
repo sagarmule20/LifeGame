@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { syncToCloud } from '../lib/sync'
 import { getRank, getNextRank, RANKS } from '../data/ranks'
 import { MISSION_TEMPLATES } from '../data/ranks'
+import { MANDATORY_MISSION_IDS } from '../data/seed'
 import { ACHIEVEMENTS, RARITY_COLORS } from '../data/achievements'
 import XPBar from '../components/XPBar'
 
@@ -114,33 +115,44 @@ export default function ProfileScreen() {
       {activeTab === 'missions' && (
         <div className="space-y-3">
           <p className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>
-            Your active missions ({missions.length}) • {freeSlotsLeft > 0 ? `${freeSlotsLeft} free slots left` : 'New missions cost €50 each'}
+            Your missions ({missions.length}) • 3 core + {Math.max(0, missions.length - 3)} extra {missions.length > 3 ? '' : '• New missions cost €50'}
           </p>
 
           {/* Active missions */}
-          {missions.map((m) => (
-            <div key={m.id} className="card p-3 flex items-center gap-3" style={{ borderColor: m.color }}>
-              <span className="text-2xl">{m.icon}</span>
-              <div className="flex-1">
-                <p className="text-sm font-extrabold" style={{ color: m.color }}>{m.name}</p>
-                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  {tasks.filter((t) => allQuests.filter((q) => q.missionId === m.id).some((q) => q.id === t.questId)).length} tasks
-                </p>
+          {missions.map((m) => {
+            const isMandatory = MANDATORY_MISSION_IDS.includes(m.id)
+            const taskCount = tasks.filter((t) => allQuests.filter((q) => q.missionId === m.id).some((q) => q.id === t.questId)).length
+            return (
+              <div key={m.id} className="card p-3 flex items-center gap-3" style={{ borderColor: m.color }}>
+                <span className="text-2xl">{m.icon}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-extrabold" style={{ color: m.color }}>{m.name}</p>
+                    {isMandatory && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded" style={{ background: `${m.color}22`, color: m.color }}>
+                        CORE
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{taskCount} tasks</p>
+                </div>
+                {!isMandatory && (
+                  <button onClick={() => { if (confirm(`Remove ${m.name}?`)) removeMission(m.id) }}
+                    className="text-xs px-2 py-1 rounded-lg" style={{ color: 'var(--red)', border: '1px solid var(--red)' }}>
+                    Remove
+                  </button>
+                )}
               </div>
-              <button onClick={() => { if (confirm(`Remove ${m.name}?`)) removeMission(m.id) }}
-                className="text-xs px-2 py-1 rounded-lg" style={{ color: 'var(--red)', border: '1px solid var(--red)' }}>
-                Remove
-              </button>
-            </div>
-          ))}
+            )
+          })}
 
           {/* Template gallery */}
           <p className="text-xs font-bold mt-4" style={{ color: 'var(--text-dim)' }}>
-            📋 Add from templates {missions.length >= 4 && <span style={{ color: '#FFC800' }}>(€50 each)</span>}
+            📋 Add extra missions <span style={{ color: '#FFC800' }}>(€50 each)</span>
           </p>
           {MISSION_TEMPLATES.map((tmpl) => {
             const alreadyAdded = missions.some((m) => m.name === tmpl.name)
-            const isFree = missions.length < 4
+            const isFree = false // all extra missions cost €50
             return (
               <div key={tmpl.name} className="card p-3 flex items-center gap-3"
                 style={{ opacity: alreadyAdded ? 0.4 : 1 }}>
@@ -156,12 +168,13 @@ export default function ProfileScreen() {
                   disabled={alreadyAdded}
                   className="btn text-[10px] py-1.5 px-3"
                   style={{
-                    background: alreadyAdded ? 'var(--bg)' : isFree ? 'var(--green)' : euros >= 50 ? 'var(--orange)' : 'var(--bg)',
-                    color: alreadyAdded ? 'var(--text-muted)' : '#fff',
+                    background: alreadyAdded ? 'var(--bg)' : euros >= 50 ? 'var(--orange)' : 'var(--bg)',
+                    color: alreadyAdded ? 'var(--text-muted)' : euros >= 50 ? '#fff' : 'var(--text-muted)',
                     boxShadow: alreadyAdded ? 'none' : undefined,
-                    border: alreadyAdded ? '1px solid var(--border)' : 'none',
+                    border: alreadyAdded || euros >= 50 ? 'none' : '1px solid var(--border)',
+                    opacity: alreadyAdded ? 0.5 : 1,
                   }}>
-                  {alreadyAdded ? 'Added' : isFree ? 'FREE' : '€50'}
+                  {alreadyAdded ? 'Added' : '💶 €50'}
                 </button>
               </div>
             )
