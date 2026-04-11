@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import useGameStore from './store/useGameStore'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { syncToCloud, loadFromCloud } from './lib/sync'
+import { seedMissions, seedQuests, seedTasks, MANDATORY_MISSION_IDS } from './data/seed'
 import { requestNotificationPermission, scheduleTaskNotifications } from './lib/notifications'
 import BottomNav from './components/BottomNav'
 import GameEventManager from './components/GameEventManager'
@@ -16,6 +17,27 @@ import RewardsScreen from './screens/RewardsScreen'
 import LeaderboardScreen from './screens/LeaderboardScreen'
 import EarningsScreen from './screens/EarningsScreen'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
+
+// Ensure mandatory missions are always present after cloud load
+function mergeMandatoryMissions(cloudData) {
+  const missions = [...cloudData.missions]
+  const quests = [...cloudData.quests]
+  const tasks = [...cloudData.tasks]
+
+  MANDATORY_MISSION_IDS.forEach((missionId) => {
+    if (!missions.find((m) => m.id === missionId)) {
+      const seedM = seedMissions.find((m) => m.id === missionId)
+      const seedQ = seedQuests.filter((q) => q.missionId === missionId)
+      const seedQIds = seedQ.map((q) => q.id)
+      const seedT = seedTasks.filter((t) => seedQIds.includes(t.questId))
+      if (seedM) missions.push(seedM)
+      quests.push(...seedQ)
+      tasks.push(...seedT)
+    }
+  })
+
+  return { ...cloudData, missions, quests, tasks }
+}
 
 export default function App() {
   const [authReady, setAuthReady] = useState(false)
@@ -33,7 +55,7 @@ export default function App() {
         setUser(session.user)
         loadFromCloud(session.user.id).then((cloudData) => {
           if (cloudData) {
-            useGameStore.setState({ ...cloudData, initialized: true })
+            useGameStore.setState({ ...mergeMandatoryMissions(cloudData), initialized: true })
           } else {
             initializeStore()
           }
@@ -88,7 +110,7 @@ export default function App() {
       setUser(authUser)
       loadFromCloud(authUser.id).then((cloudData) => {
         if (cloudData) {
-          useGameStore.setState({ ...cloudData, initialized: true })
+          useGameStore.setState({ ...mergeMandatoryMissions(cloudData), initialized: true })
         } else {
           initializeStore()
         }
