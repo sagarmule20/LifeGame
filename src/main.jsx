@@ -3,6 +3,12 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+// Capture beforeinstallprompt ASAP — before React mounts — so it isn't missed
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  window.__pwaInstallPrompt = e
+})
+
 // Cache buster: every build gets a new timestamp baked in.
 // If it differs from what's stored, nuke caches and reload.
 const BUILD_VERSION = import.meta.env.VITE_BUILD_VERSION || '__dev__'

@@ -17,10 +17,17 @@ export default function PWAInstallPrompt() {
     if (window.matchMedia('(display-mode: standalone)').matches) return
     if (localStorage.getItem('pwa-install-dismissed')) return
 
+    // Use early-captured event if available (fires before React mounts on Android)
+    if (window.__pwaInstallPrompt) {
+      setDeferredPrompt(window.__pwaInstallPrompt)
+      setTimeout(() => setShow(true), 2000)
+      return
+    }
+
+    // Fallback: listen for event if it hasn't fired yet
     const handler = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
-      // Small delay so the app loads first
       setTimeout(() => setShow(true), 2000)
     }
 
