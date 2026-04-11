@@ -46,9 +46,6 @@ export default function AuthScreen({ onAuth }) {
         <div className="text-center mb-8">
           <div className="text-6xl mb-3">💶</div>
           <h1 className="text-3xl font-black" style={{ color: 'var(--green)' }}>Life Game</h1>
-          <p className="text-sm mt-1 font-bold" style={{ color: 'var(--text-dim)' }}>
-            Earn €5 for every task you crush.
-          </p>
         </div>
 
         {/* Toggle */}

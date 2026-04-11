@@ -14,6 +14,7 @@ import DailyScreen from './screens/DailyScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import RewardsScreen from './screens/RewardsScreen'
 import LeaderboardScreen from './screens/LeaderboardScreen'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
 
 export default function App() {
   const [authReady, setAuthReady] = useState(false)
@@ -120,6 +121,7 @@ export default function App() {
         style={{ background: 'var(--bg)' }}
       >
         <GameEventManager />
+        <PWAInstallPrompt />
         <Routes>
           <Route path="/" element={<DailyScreen />} />
           <Route path="/map" element={<MapScreen />} />
