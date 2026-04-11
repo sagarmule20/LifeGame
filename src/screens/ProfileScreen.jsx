@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import useGameStore from '../store/useGameStore'
 import { supabase } from '../lib/supabase'
 import { syncToCloud } from '../lib/sync'
@@ -111,76 +111,18 @@ export default function ProfileScreen() {
         ))}
       </div>
 
-      {/* Missions tab — template picker */}
+      {/* Missions tab — manage missions, quests, tasks */}
       {activeTab === 'missions' && (
-        <div className="space-y-3">
-          <p className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>
-            Your missions ({missions.length}) • 3 core + {Math.max(0, missions.length - 3)} extra {missions.length > 3 ? '' : '• New missions cost €50'}
-          </p>
-
-          {/* Active missions */}
-          {missions.map((m) => {
-            const isMandatory = MANDATORY_MISSION_IDS.includes(m.id)
-            const taskCount = tasks.filter((t) => allQuests.filter((q) => q.missionId === m.id).some((q) => q.id === t.questId)).length
-            return (
-              <div key={m.id} className="card p-3 flex items-center gap-3" style={{ borderColor: m.color }}>
-                <span className="text-2xl">{m.icon}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-extrabold" style={{ color: m.color }}>{m.name}</p>
-                    {isMandatory && (
-                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded" style={{ background: `${m.color}22`, color: m.color }}>
-                        CORE
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{taskCount} tasks</p>
-                </div>
-                {!isMandatory && (
-                  <button onClick={() => { if (confirm(`Remove ${m.name}?`)) removeMission(m.id) }}
-                    className="text-xs px-2 py-1 rounded-lg" style={{ color: 'var(--red)', border: '1px solid var(--red)' }}>
-                    Remove
-                  </button>
-                )}
-              </div>
-            )
-          })}
-
-          {/* Template gallery */}
-          <p className="text-xs font-bold mt-4" style={{ color: 'var(--text-dim)' }}>
-            📋 Add extra missions <span style={{ color: '#FFC800' }}>(€50 each)</span>
-          </p>
-          {MISSION_TEMPLATES.map((tmpl) => {
-            const alreadyAdded = missions.some((m) => m.name === tmpl.name)
-            const isFree = false // all extra missions cost €50
-            return (
-              <div key={tmpl.name} className="card p-3 flex items-center gap-3"
-                style={{ opacity: alreadyAdded ? 0.4 : 1 }}>
-                <span className="text-2xl">{tmpl.icon}</span>
-                <div className="flex-1">
-                  <p className="text-sm font-bold">{tmpl.name}</p>
-                  <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                    {tmpl.quests.length} quests • {tmpl.quests.reduce((s, q) => s + q.tasks.length, 0)} tasks
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleAddTemplate(tmpl)}
-                  disabled={alreadyAdded}
-                  className="btn text-[10px] py-1.5 px-3"
-                  style={{
-                    background: alreadyAdded ? 'var(--bg)' : euros >= 50 ? 'var(--orange)' : 'var(--bg)',
-                    color: alreadyAdded ? 'var(--text-muted)' : euros >= 50 ? '#fff' : 'var(--text-muted)',
-                    boxShadow: alreadyAdded ? 'none' : undefined,
-                    border: alreadyAdded || euros >= 50 ? 'none' : '1px solid var(--border)',
-                    opacity: alreadyAdded ? 0.5 : 1,
-                  }}>
-                  {alreadyAdded ? 'Added' : '💶 €50'}
-                </button>
-              </div>
-            )
-          })}
-        </div>
+        <MissionsManager
+          missions={missions}
+          quests={allQuests}
+          tasks={tasks}
+          euros={euros}
+          onAddTemplate={handleAddTemplate}
+          onRemoveMission={removeMission}
+        />
       )}
+
 
       {/* Stats tab */}
       {activeTab === 'stats' && (
@@ -231,6 +173,168 @@ export default function ProfileScreen() {
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * MissionsManager — expandable mission tree with inline task adding.
+ * Lives inside Profile → Missions tab.
+ */
+function MissionsManager({ missions, quests, tasks, euros, onAddTemplate, onRemoveMission }) {
+  const [expanded, setExpanded] = useState(null) // missionId or null
+  const [newTaskName, setNewTaskName] = useState('')
+  const [addingToQuest, setAddingToQuest] = useState(null) // questId
+  const addTask = useGameStore((s) => s.addTask)
+  const inputRef = useRef(null)
+
+  const toggle = (id) => setExpanded(expanded === id ? null : id)
+
+  const handleAddTask = (questId) => {
+    if (!newTaskName.trim()) return
+    addTask(questId, newTaskName.trim())
+    setNewTaskName('')
+    setAddingToQuest(null)
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>
+        Tap a mission to manage its tasks
+      </p>
+
+      {/* Active missions — expandable */}
+      {missions.map((m) => {
+        const isMandatory = MANDATORY_MISSION_IDS.includes(m.id)
+        const missionQuests = quests.filter((q) => q.missionId === m.id)
+        const missionTasks = tasks.filter((t) => missionQuests.some((q) => q.id === t.questId))
+        const isExpanded = expanded === m.id
+
+        return (
+          <div key={m.id} className="card overflow-hidden" style={{ borderColor: isExpanded ? m.color : undefined }}>
+            {/* Mission header — tap to expand */}
+            <button
+              onClick={() => toggle(m.id)}
+              className="w-full flex items-center gap-3 p-3 text-left active:scale-[0.99] transition-transform"
+            >
+              <span className="text-2xl">{m.icon}</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-extrabold" style={{ color: m.color }}>{m.name}</p>
+                  {isMandatory && (
+                    <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded" style={{ background: `${m.color}22`, color: m.color }}>
+                      CORE
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  {missionQuests.length} quests • {missionTasks.length} tasks
+                </p>
+              </div>
+              <span className="text-sm" style={{ color: 'var(--text-muted)', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
+                ▶
+              </span>
+            </button>
+
+            {/* Expanded content — quests + tasks + add */}
+            {isExpanded && (
+              <div style={{ borderTop: '1px solid var(--border)' }}>
+                {missionQuests.map((q) => {
+                  const questTasks = tasks.filter((t) => t.questId === q.id)
+                  return (
+                    <div key={q.id} className="px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                      {/* Quest name */}
+                      <p className="text-xs font-extrabold mb-1" style={{ color: 'var(--text-dim)' }}>
+                        📋 {q.name}
+                      </p>
+
+                      {/* Tasks under this quest */}
+                      {questTasks.map((t) => (
+                        <div key={t.id} className="flex items-center gap-2 py-1 pl-4">
+                          <span className="text-[10px]">{t.completedToday ? '✅' : '⬜'}</span>
+                          <span className="text-xs flex-1 truncate" style={{ color: 'var(--text)' }}>{t.name}</span>
+                          <span className="text-[10px] font-bold" style={{ color: '#FFC800' }}>€5</span>
+                        </div>
+                      ))}
+
+                      {/* Add task to this quest */}
+                      {addingToQuest === q.id ? (
+                        <div className="flex items-center gap-2 pl-4 py-1.5">
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder="New task name..."
+                            value={newTaskName}
+                            onChange={(e) => setNewTaskName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddTask(q.id); if (e.key === 'Escape') { setAddingToQuest(null); setNewTaskName('') } }}
+                            className="flex-1 bg-transparent text-xs font-bold outline-none"
+                            style={{ color: 'var(--text)', borderBottom: '1px solid var(--green)', paddingBottom: 2 }}
+                            autoFocus
+                          />
+                          <button onClick={() => handleAddTask(q.id)}
+                            className="text-[10px] font-extrabold px-2 py-1 rounded-lg"
+                            style={{ background: 'var(--green)', color: '#fff' }}>
+                            ADD
+                          </button>
+                          <button onClick={() => { setAddingToQuest(null); setNewTaskName('') }}
+                            className="text-[10px]" style={{ color: 'var(--text-muted)' }}>✕</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setAddingToQuest(q.id); setNewTaskName('') }}
+                          className="flex items-center gap-1.5 pl-4 py-1.5 text-xs font-bold w-full text-left active:scale-[0.98]"
+                          style={{ color: 'var(--green)' }}
+                        >
+                          <span>＋</span> Add task
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* Remove mission (non-mandatory only) */}
+                {!isMandatory && (
+                  <div className="p-3 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+                    <button onClick={() => { if (confirm(`Remove ${m.name} and all its tasks?`)) onRemoveMission(m.id) }}
+                      className="text-xs font-bold" style={{ color: 'var(--red)' }}>
+                      Remove this mission
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {/* Template gallery */}
+      <p className="text-xs font-bold mt-4" style={{ color: 'var(--text-dim)' }}>
+        📋 Add extra missions <span style={{ color: '#FFC800' }}>(€50 each)</span>
+      </p>
+      {MISSION_TEMPLATES.map((tmpl) => {
+        const alreadyAdded = missions.some((m) => m.name === tmpl.name)
+        return (
+          <div key={tmpl.name} className="card p-3 flex items-center gap-3" style={{ opacity: alreadyAdded ? 0.4 : 1 }}>
+            <span className="text-2xl">{tmpl.icon}</span>
+            <div className="flex-1">
+              <p className="text-sm font-bold">{tmpl.name}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                {tmpl.quests.length} quests • {tmpl.quests.reduce((s, q) => s + q.tasks.length, 0)} tasks
+              </p>
+            </div>
+            <button onClick={() => onAddTemplate(tmpl)} disabled={alreadyAdded}
+              className="btn text-[10px] py-1.5 px-3"
+              style={{
+                background: alreadyAdded ? 'var(--bg)' : euros >= 50 ? 'var(--orange)' : 'var(--bg)',
+                color: alreadyAdded ? 'var(--text-muted)' : euros >= 50 ? '#fff' : 'var(--text-muted)',
+                border: alreadyAdded || euros >= 50 ? 'none' : '1px solid var(--border)',
+                opacity: alreadyAdded ? 0.5 : 1,
+              }}>
+              {alreadyAdded ? 'Added' : '💶 €50'}
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }
