@@ -94,13 +94,22 @@ alter table public.rewards enable row level security;
 alter table public.achievements enable row level security;
 alter table public.inventory enable row level security;
 
--- RLS Policies: each user can only access their own data
-create policy "Users read own profile" on public.profiles for select using (auth.uid() = id);
+-- RLS Policies: drop first so this script is re-runnable
+drop policy if exists "Users read own profile" on public.profiles;
+drop policy if exists "Users update own profile" on public.profiles;
+drop policy if exists "Users insert own profile" on public.profiles;
+drop policy if exists "Leaderboard read" on public.profiles;
+drop policy if exists "Users manage own missions" on public.missions;
+drop policy if exists "Users manage own quests" on public.quests;
+drop policy if exists "Users manage own tasks" on public.tasks;
+drop policy if exists "Users manage own rewards" on public.rewards;
+drop policy if exists "Users manage own achievements" on public.achievements;
+drop policy if exists "Users manage own inventory" on public.inventory;
+
+-- Profiles: users manage their own + everyone can read for leaderboard
+create policy "Users read own profile" on public.profiles for select using (true);
 create policy "Users update own profile" on public.profiles for update using (auth.uid() = id);
 create policy "Users insert own profile" on public.profiles for insert with check (auth.uid() = id);
-
--- Leaderboard: allow all authenticated users to read all profiles (for ranking)
-create policy "Leaderboard read" on public.profiles for select using (true);
 
 create policy "Users manage own missions" on public.missions for all using (auth.uid() = user_id);
 create policy "Users manage own quests" on public.quests for all using (auth.uid() = user_id);
