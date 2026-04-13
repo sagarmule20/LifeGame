@@ -34,8 +34,9 @@ export default function DailyScreen() {
           <p className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>{today}</p>
         </div>
         <div className="text-right">
+          <p className="text-xl font-black" style={{ color: '#FFC800' }}>💶 €{euros}</p>
           <p className="text-[10px] font-bold" style={{ color: rank.color }}>
-            {rank.icon} {rank.name}
+            You are {rank.icon} {rank.name}
           </p>
         </div>
       </div>
