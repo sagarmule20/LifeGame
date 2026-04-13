@@ -72,8 +72,8 @@ export default function ProfileScreen() {
             <p className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>{rank.tagline}</p>
           </div>
           <div className="text-right">
-            <p className="text-xl font-black" style={{ color: '#FFC800' }}>€{euros}</p>
-            <p className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>balance</p>
+            <p className="text-xl font-black" style={{ color: '#FFC800' }}>€{totalEurosEarned}</p>
+            <p className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>total earned</p>
           </div>
         </div>
         {nextRank && (
